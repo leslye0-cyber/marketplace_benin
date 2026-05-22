@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Commandes{% endblock %}
+
+{% block content %}
+<h3 class="mb-4"><i class="fas fa-list text-orange"></i> Mes Commandes</h3>
+
+{% if commandes %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Articles</th>
+                    <th>Total</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for commande in commandes %}
+                <tr>
+                    <td>#{{ commande.id }}</td>
+                    <td>{{ commande.created_at|date:"d/m/Y" }}</td>
+                    <td>{{ commande.items.count }} article(s)</td>
+                    <td class="text-orange fw-bold">{{ commande.total }} FCFA</td>
+                    <td>
+                        {% if commande.statut == 'en_attente' %}
+                            <span class="badge bg-warning">En attente</span>
+                        {% elif commande.statut == 'payee' %}
+                            <span class="badge bg-info">Payée</span>
+                        {% elif commande.statut == 'en_preparation' %}
+                            <span class="badge bg-primary">En préparation</span>
+                        {% elif commande.statut == 'expediee' %}
+                            <span class="badge bg-secondary">Expédiée</span>
+                        {% elif commande.statut == 'livree' %}
+                            <span class="badge bg-success">Livrée</span>
+                        {% elif commande.statut == 'annulee' %}
+                            <span class="badge bg-danger">Annulée</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'detail_commande' commande.id %}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+    <h4 class="text-muted">Aucune commande pour l'instant</h4>
+    <a href="{% url 'home' %}" class="btn btn-orange mt-3">
+        Découvrir les produits
+    </a>
+</div>
+{% endif %}
+{% endblock %}

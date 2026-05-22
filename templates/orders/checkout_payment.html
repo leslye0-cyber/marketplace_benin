@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Paiement de la commande{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Procéder au paiement</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Récapitulatif de la commande #{{ commande.id }}</h5>
+                    <p><strong>Total à payer :</strong> {{ commande.total_amount }} XOF</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Choisissez votre méthode de paiement :</label>
+                            {% for method in payment_methods %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="method_{{ method.name }}" value="{{ method.name }}" required>
+                                <label class="form-check-label" for="method_{{ method.name }}">
+                                    {{ method.get_name_display }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Payer maintenant</button>
+                        <a href="{% url 'orders:voir_panier' %}" class="btn btn-secondary">Retour au panier</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

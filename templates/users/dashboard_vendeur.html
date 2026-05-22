@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — {{ shop.nom }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">
+            <i class="fas fa-tachometer-alt text-orange"></i> {{ shop.nom }}
+        </h2>
+        <small class="text-muted">Tableau de bord vendeur</small>
+    </div>
+    <a href="{% url 'ajouter_produit' %}" class="btn btn-orange">
+        <i class="fas fa-plus"></i> Ajouter un produit
+    </a>
+</div>
+
+<!-- Stats revenus -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 h-100"
+             style="border-left: 4px solid #FF6B00 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Revenu total net</small>
+                        <h4 class="text-orange mb-0">{{ revenu_net }} FCFA</h4>
+                    </div>
+                    <i class="fas fa-wallet fa-2x text-orange opacity-50"></i>
+                </div>
+                <small class="text-muted">
+                    Après commission (5%) : -{{ commission_total }} FCFA
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 h-100"
+             style="border-left: 4px solid #28a745 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Ce mois-ci</small>
+                        <h4 class="text-success mb-0">{{ revenu_mois }} FCFA</h4>
+                    </div>
+                    <i class="fas fa-calendar fa-2x text-success opacity-50"></i>
+                </div>
+                <small class="text-muted">Cette semaine : {{ revenu_semaine }} FCFA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 h-100"
+             style="border-left: 4px solid #007bff !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Total commandes</small>
+                        <h4 class="text-primary mb-0">{{ total_commandes }}</h4>
+                    </div>
+                    <i class="fas fa-shopping-bag fa-2x text-primary opacity-50"></i>
+                </div>
+                <small class="text-muted">
+                    {{ commandes_livrees }} livrées •
+                    {{ commandes_en_attente }} en attente
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm border-0 h-100"
+             style="border-left: 4px solid #6f42c1 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Produits</small>
+                        <h4 style="color:#6f42c1;" class="mb-0">{{ total_produits }}</h4>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-50" style="color:#6f42c1;"></i>
+                </div>
+                <small class="text-muted">
+                    {% if stock_critique.count > 0 %}
+                        <span class="text-danger">
+                            ⚠️ {{ stock_critique.count }} en stock critique
+                        </span>
+                    {% else %}
+                        Tous les stocks OK ✅
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    <!-- Colonne gauche -->
+    <div class="col-md-8">
+
+        <!-- Commandes récentes -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock text-orange"></i> Commandes récentes
+                </h5>
+                <a href="{% url 'commandes_vendeur' %}"
+                   class="btn btn-sm btn-outline-secondary">
+                    Voir tout
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if commandes_recentes %}
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Acheteur</th>
+                            <th>Total</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for commande in commandes_recentes %}
+                        <tr>
+                            <td>#{{ commande.id }}</td>
+                            <td>{{ commande.acheteur.username }}</td>
+                            <td class="text-orange fw-bold">{{ commande.total }} FCFA</td>
+                            <td>
+                                {% if commande.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elif commande.statut == 'payee' %}
+                                    <span class="badge bg-info">Payée</span>
+                                {% elif commande.statut == 'en_preparation' %}
+                                    <span class="badge bg-primary">Préparation</span>
+                                {% elif commande.statut == 'expediee' %}
+                                    <span class="badge bg-secondary">Expédiée</span>
+                                {% elif commande.statut == 'livree' %}
+                                    <span class="badge bg-success">Livrée</span>
+                                {% elif commande.statut == 'annulee' %}
+                                    <span class="badge bg-danger">Annulée</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ commande.created_at|date:"d/m/Y" }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-shopping-bag fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Aucune commande pour l'instant.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mes produits -->
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-box text-orange"></i> Mes produits
+                </h5>
+                <a href="{% url 'ajouter_produit' %}"
+                   class="btn btn-sm btn-orange">
+                    <i class="fas fa-plus"></i> Ajouter
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if produits %}
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Produit</th>
+                            <th>Prix</th>
+                            <th>Stock</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in produits %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if produit.image_principale %}
+                                    <img src="{{ produit.image_principale.url }}"
+                                         style="width:40px; height:40px; object-fit:cover;"
+                                         class="rounded">
+                                    {% endif %}
+                                    <span>{{ produit.nom }}</span>
+                                </div>
+                            </td>
+                            <td class="text-orange">{{ produit.prix }} FCFA</td>
+                            <td>
+                                {% if produit.stock <= 3 %}
+                                    <span class="text-danger fw-bold">{{ produit.stock }}</span>
+                                {% else %}
+                                    {{ produit.stock }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if produit.statut == 'disponible' %}
+                                    <span class="badge bg-success">Disponible</span>
+                                {% elif produit.statut == 'rupture' %}
+                                    <span class="badge bg-warning">Rupture</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'modifier_produit' produit.slug %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'supprimer_produit' produit.slug %}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Aucun produit.</p>
+                    <a href="{% url 'ajouter_produit' %}" class="btn btn-orange btn-sm mt-2">
+                        Ajouter votre premier produit
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Colonne droite -->
+    <div class="col-md-4">
+
+        <!-- Produits populaires -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-fire text-orange"></i> Top produits
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if produits_populaires %}
+                    {% for p in produits_populaires %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong class="small">{{ p.product__nom }}</strong>
+                            <div class="progress mt-1" style="height:6px; width:150px;">
+                                <div class="progress-bar bg-orange"
+                                     style="width:{{ p.total_vendu|add:0 }}0%; background-color:#FF6B00;">
+                                </div>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark">
+                            {{ p.total_vendu }} vendus
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center small">
+                        Pas encore de ventes
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stock critique -->
+        {% if stock_critique %}
+        <div class="card shadow-sm mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Stock critique
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for produit in stock_critique %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">{{ produit.nom }}</span>
+                    <span class="badge bg-danger">{{ produit.stock }} restants</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Statut boutique -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-store text-orange"></i> Ma boutique
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Statut :</strong>
+                    {% if shop.statut == 'actif' %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ shop.statut }}</span>
+                    {% endif %}
+                </p>
+                <p class="mb-2">
+                    <strong>Premium :</strong>
+                    {% if shop.est_premium %}
+                        <span class="badge bg-warning text-dark">⭐ Premium</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark">Standard</span>
+                    {% endif %}
+                </p>
+                <p class="mb-0">
+                    <strong>Commission :</strong>
+                    <span class="text-muted">5% par vente</span>
+                </p>
+                <hr>
+                <div class="d-grid">
+                    <a href="{% url 'commandes_vendeur' %}"
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list"></i> Toutes mes commandes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

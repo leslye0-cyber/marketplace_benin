@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Suivi — Commande #{{ commande.id }}{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">
+    <i class="fas fa-map-marker-alt text-orange"></i>
+    Suivi de la commande #{{ commande.id }}
+</h3>
+
+<div class="row">
+    <div class="col-md-8">
+
+        <!-- Timeline statut -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Statut de la commande</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+
+                    <!-- Étape 1 : Commande passée -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                             style="width:40px; height:40px; background-color:#FF6B00; flex-shrink:0;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <strong>Commande passée</strong>
+                            <small class="text-muted d-block">
+                                {{ commande.created_at|date:"d/m/Y à H:i" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Étape 2 : Paiement -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:40px; height:40px; flex-shrink:0;
+                             background-color: {% if commande.statut != 'en_attente' %}#28a745{% else %}#dee2e6{% endif %};">
+                            <i class="fas fa-credit-card text-white"></i>
+                        </div>
+                        <div>
+                            <strong>Paiement</strong>
+                            <small class="d-block">
+                                {% if commande.paiement_confirme %}
+                                    <span class="text-success">Confirmé</span>
+                                {% elif commande.methode_paiement == 'especes' %}
+                                    <span class="text-warning">À la livraison</span>
+                                {% else %}
+                                    <span class="text-muted">En attente</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Étape 3 : Préparation -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:40px; height:40px; flex-shrink:0;
+                             background-color: {% if commande.statut == 'en_preparation' or commande.statut == 'expediee' or commande.statut == 'livree' %}#28a745{% else %}#dee2e6{% endif %};">
+                            <i class="fas fa-box text-white"></i>
+                        </div>
+                        <div>
+                            <strong>En préparation</strong>
+                            <small class="text-muted d-block">
+                                Votre commande est en cours de préparation
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Étape 4 : En livraison -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:40px; height:40px; flex-shrink:0;
+                             background-color: {% if commande.statut == 'expediee' or commande.statut == 'livree' %}#28a745{% else %}#dee2e6{% endif %};">
+                            <i class="fas fa-motorcycle text-white"></i>
+                        </div>
+                        <div>
+                            <strong>En livraison</strong>
+                            {% if livraison and livraison.livreur %}
+                            <small class="text-muted d-block">
+                                Livreur : {{ livraison.livreur.utilisateur.username }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Étape 5 : Livré -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:40px; height:40px; flex-shrink:0;
+                             background-color: {% if commande.statut == 'livree' %}#28a745{% else %}#dee2e6{% endif %};">
+                            <i class="fas fa-home text-white"></i>
+                        </div>
+                        <div>
+                            <strong>Livré</strong>
+                            {% if livraison and livraison.date_livraison %}
+                            <small class="text-muted d-block">
+                                {{ livraison.date_livraison|date:"d/m/Y à H:i" }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+        <!-- Infos livraison -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Adresse de livraison</h5>
+            </div>
+            <div class="card-body">
+                <p><i class="fas fa-map-marker-alt text-orange"></i>
+                    {{ commande.adresse_livraison }}</p>
+                <p><i class="fas fa-city text-orange"></i>
+                    {{ commande.ville }}</p>
+                <p><i class="fas fa-phone text-orange"></i>
+                    {{ commande.telephone_livraison }}</p>
+            </div>
+        </div>
+
+        <!-- Statut actuel -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                {% if commande.statut == 'en_attente' %}
+                    <span class="badge bg-warning fs-6">En attente de paiement</span>
+                {% elif commande.statut == 'payee' %}
+                    <span class="badge bg-info fs-6">Payée</span>
+                {% elif commande.statut == 'en_preparation' %}
+                    <span class="badge bg-primary fs-6">En préparation</span>
+                {% elif commande.statut == 'expediee' %}
+                    <span class="badge bg-secondary fs-6">En livraison</span>
+                {% elif commande.statut == 'livree' %}
+                    <span class="badge bg-success fs-6">✓ Livrée</span>
+                {% elif commande.statut == 'annulee' %}
+                    <span class="badge bg-danger fs-6">Annulée</span>
+                {% endif %}
+
+                <div class="mt-3">
+                    <a href="{% url 'detail_commande' commande.id %}"
+                       class="btn btn-outline-secondary btn-sm">
+                        Voir la commande
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

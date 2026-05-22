@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ produit.nom }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        {% if produit.image_principale %}
+            <img src="{{ produit.image_principale.url }}"
+                 class="img-fluid rounded shadow" alt="{{ produit.nom }}">
+        {% endif %}
+        {% if images %}
+        <div class="d-flex gap-2 mt-2">
+            {% for img in images %}
+                <img src="{{ img.image.url }}" class="rounded"
+                     style="width:80px; height:80px; object-fit:cover;">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Accueil</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'produits_par_categorie' produit.categorie.slug %}">
+                        {{ produit.categorie.nom }}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">{{ produit.nom }}</li>
+            </ol>
+        </nav>
+
+        <h2>{{ produit.nom }}</h2>
+        <p class="text-muted">Vendu par <strong>{{ produit.shop.nom }}</strong></p>
+        <h3 class="text-orange">{{ produit.prix }} FCFA</h3>
+        <p class="mt-3">{{ produit.description }}</p>
+
+        {% if produit.stock > 0 %}
+            <span class="badge bg-success mb-3">
+                En stock ({{ produit.stock }} disponibles)
+            </span>
+        {% else %}
+            <span class="badge bg-danger mb-3">Rupture de stock</span>
+        {% endif %}
+
+        {% if user.is_authenticated and not user.est_vendeur %}
+            <form method="post" action="{% url 'ajouter_au_panier' produit.id %}">
+                {% csrf_token %}
+                <div class="input-group mb-3" style="max-width: 200px;">
+                    <span class="input-group-text">Qté</span>
+                    <input type="number" name="quantite" value="1"
+                           min="1" max="{{ produit.stock }}" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-orange btn-lg">
+                    <i class="fas fa-cart-plus"></i> Ajouter au panier
+                </button>
+            </form>
+        {% elif not user.is_authenticated %}
+            <a href="{% url 'connexion' %}" class="btn btn-orange btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Connectez-vous pour acheter
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- AVIS CLIENTS -->
+<div class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>⭐ Avis clients
+            <span class="badge bg-light text-dark">
+                {{ reviews.count }}
+            </span>
+        </h4>
+        <div class="d-flex gap-2">
+            {% if user.is_authenticated and not user.est_vendeur %}
+            <a href="{% url 'ajouter_avis' produit.slug %}" class="btn btn-orange btn-sm">
+                <i class="fas fa-star"></i> Donner un avis
+            </a>
+            {% endif %}
+            {% if reviews.count > 3 %}
+            <a href="{% url 'liste_avis_produit' produit.slug %}"
+               class="btn btn-outline-secondary btn-sm">
+                Voir tous ({{ reviews.count }})
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Carrousel défilant -->
+    <div class="reviews-carousel-wrapper"
+         style="overflow:hidden; position:relative; padding:10px 0;">
+        <div class="reviews-track d-flex gap-3" id="reviewsTrack"
+             style="width: max-content;">
+
+            {% if reviews %}
+                <!-- Vrais avis x2 pour boucle infinie -->
+                {% for review in reviews %}
+                <div class="card shadow-sm review-card"
+                     style="min-width:280px; max-width:280px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle text-white fw-bold d-flex
+                                            align-items-center justify-content-center"
+                                     style="width:35px; height:35px; background-color:#FF6B00;
+                                            flex-shrink:0;">
+                                    {{ review.auteur.username|first|upper }}
+                                </div>
+                                <strong>{{ review.auteur.username }}</strong>
+                            </div>
+                            <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                        </div>
+                        <div class="mb-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.note %}
+                                    <span style="color:#FF6B00;">⭐</span>
+                                {% else %}
+                                    <span style="color:#ddd;">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="mb-0 text-muted small" style="overflow:hidden;
+                           display:-webkit-box; -webkit-line-clamp:3;
+                           -webkit-box-orient:vertical;">
+                            {{ review.commentaire }}
+                        </p>
+                        {% if user == review.auteur %}
+                        <div class="mt-2 d-flex gap-1">
+                            <a href="{% url 'ajouter_avis' produit.slug %}"
+                               class="btn btn-outline-primary"
+                               style="font-size:0.75rem; padding:2px 8px;">
+                                ✏️ Modifier
+                            </a>
+                            <a href="{% url 'supprimer_avis' review.id %}"
+                               class="btn btn-outline-danger"
+                               style="font-size:0.75rem; padding:2px 8px;">
+                                🗑️ Supprimer
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Duplication pour boucle infinie -->
+                {% for review in reviews %}
+                <div class="card shadow-sm review-card"
+                     style="min-width:280px; max-width:280px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle text-white fw-bold d-flex
+                                            align-items-center justify-content-center"
+                                     style="width:35px; height:35px; background-color:#FF6B00;
+                                            flex-shrink:0;">
+                                    {{ review.auteur.username|first|upper }}
+                                </div>
+                                <strong>{{ review.auteur.username }}</strong>
+                            </div>
+                            <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                        </div>
+                        <div class="mb-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.note %}
+                                    <span style="color:#FF6B00;">⭐</span>
+                                {% else %}
+                                    <span style="color:#ddd;">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="mb-0 text-muted small" style="overflow:hidden;
+                           display:-webkit-box; -webkit-line-clamp:3;
+                           -webkit-box-orient:vertical;">
+                            {{ review.commentaire }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+
+            {% else %}
+                <!-- Avis pré-écrits si aucun avis réel -->
+                {% with avis_precrits="1,2,3,4,5,6" %}
+                {% for _ in "123456" %}
+                <div class="card shadow-sm review-card"
+                     style="min-width:280px; max-width:280px;
+                            opacity: {% if forloop.counter == 1 %}1{% elif forloop.counter == 2 %}0.95{% else %}0.9{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle text-white fw-bold d-flex
+                                            align-items-center justify-content-center"
+                                     style="width:35px; height:35px; flex-shrink:0;
+                                     background-color:
+                                     {% if forloop.counter == 1 %}#FF6B00
+                                     {% elif forloop.counter == 2 %}#28a745
+                                     {% elif forloop.counter == 3 %}#007bff
+                                     {% elif forloop.counter == 4 %}#6f42c1
+                                     {% elif forloop.counter == 5 %}#dc3545
+                                     {% else %}#fd7e14{% endif %};">
+                                     {% if forloop.counter == 1 %}A
+                                     {% elif forloop.counter == 2 %}F
+                                     {% elif forloop.counter == 3 %}M
+                                     {% elif forloop.counter == 4 %}S
+                                     {% elif forloop.counter == 5 %}K
+                                     {% else %}R{% endif %}
+                                </div>
+                                <strong>
+                                    {% if forloop.counter == 1 %}Amina K.
+                                    {% elif forloop.counter == 2 %}Fréjus M.
+                                    {% elif forloop.counter == 3 %}Marie T.
+                                    {% elif forloop.counter == 4 %}Serge D.
+                                    {% elif forloop.counter == 5 %}Koffi A.
+                                    {% else %}Rose B.{% endif %}
+                                </strong>
+                            </div>
+                            <small class="text-muted">
+                                {% if forloop.counter == 1 %}12/04/2026
+                                {% elif forloop.counter == 2 %}08/04/2026
+                                {% elif forloop.counter == 3 %}03/04/2026
+                                {% elif forloop.counter == 4 %}28/03/2026
+                                {% elif forloop.counter == 5 %}21/03/2026
+                                {% else %}15/03/2026{% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Étoiles -->
+                        <div class="mb-2">
+                            {% if forloop.counter == 1 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 2 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐</span><span style="color:#ddd;">☆</span>
+                            {% elif forloop.counter == 3 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 4 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐</span><span style="color:#ddd;">☆</span>
+                            {% elif forloop.counter == 5 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% else %}
+                                <span style="color:#FF6B00;">⭐⭐⭐</span><span style="color:#ddd;">☆☆</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Commentaire -->
+                        <p class="mb-0 text-muted small">
+                            {% if forloop.counter == 1 %}
+                                Produit excellent ! Livraison rapide et emballage soigné. Je recommande vraiment cette boutique, très sérieuse.
+                            {% elif forloop.counter == 2 %}
+                                Très bonne qualité, conforme à la description. Le vendeur est réactif et professionnel. Satisfait de mon achat !
+                            {% elif forloop.counter == 3 %}
+                                J'adore ce produit ! Il est encore mieux en vrai que sur les photos. La qualité est top, je reviendrai acheter.
+                            {% elif forloop.counter == 4 %}
+                                Bon produit dans l'ensemble. Livraison un peu longue mais la qualité est au rendez-vous. Je recommande.
+                            {% elif forloop.counter == 5 %}
+                                Parfait ! Exactement ce que je cherchais. Le rapport qualité-prix est excellent. Très bonne boutique béninoise !
+                            {% else %}
+                                Produit correct, correspond bien à la description. Je suis contente de mon achat. Service client agréable.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <!-- Duplication pour boucle infinie -->
+                {% for _ in "123456" %}
+                <div class="card shadow-sm review-card"
+                     style="min-width:280px; max-width:280px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle text-white fw-bold d-flex
+                                            align-items-center justify-content-center"
+                                     style="width:35px; height:35px; flex-shrink:0;
+                                     background-color:
+                                     {% if forloop.counter == 1 %}#FF6B00
+                                     {% elif forloop.counter == 2 %}#28a745
+                                     {% elif forloop.counter == 3 %}#007bff
+                                     {% elif forloop.counter == 4 %}#6f42c1
+                                     {% elif forloop.counter == 5 %}#dc3545
+                                     {% else %}#fd7e14{% endif %};">
+                                     {% if forloop.counter == 1 %}A
+                                     {% elif forloop.counter == 2 %}F
+                                     {% elif forloop.counter == 3 %}M
+                                     {% elif forloop.counter == 4 %}S
+                                     {% elif forloop.counter == 5 %}K
+                                     {% else %}R{% endif %}
+                                </div>
+                                <strong>
+                                    {% if forloop.counter == 1 %}Amina K.
+                                    {% elif forloop.counter == 2 %}Fréjus M.
+                                    {% elif forloop.counter == 3 %}Marie T.
+                                    {% elif forloop.counter == 4 %}Serge D.
+                                    {% elif forloop.counter == 5 %}Koffi A.
+                                    {% else %}Rose B.{% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            {% if forloop.counter == 1 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 2 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 3 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 4 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐</span>
+                            {% elif forloop.counter == 5 %}
+                                <span style="color:#FF6B00;">⭐⭐⭐⭐⭐</span>
+                            {% else %}
+                                <span style="color:#FF6B00;">⭐⭐⭐</span>
+                            {% endif %}
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            {% if forloop.counter == 1 %}
+                                Produit excellent ! Livraison rapide et emballage soigné.
+                            {% elif forloop.counter == 2 %}
+                                Très bonne qualité, conforme à la description.
+                            {% elif forloop.counter == 3 %}
+                                J'adore ce produit ! Encore mieux en vrai que sur les photos.
+                            {% elif forloop.counter == 4 %}
+                                Bon produit dans l'ensemble. Je recommande.
+                            {% elif forloop.counter == 5 %}
+                                Parfait ! Exactement ce que je cherchais.
+                            {% else %}
+                                Produit correct, correspond à la description.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Contrôles -->
+    <div class="d-flex justify-content-center gap-3 mt-3">
+        <button class="btn btn-outline-secondary btn-sm" id="prevReview">
+            ← Précédent
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" id="pauseReview">
+            ⏸ Pause
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" id="nextReview">
+            Suivant →
+        </button>
+    </div>
+
+</div>
+
+<!-- Produits similaires -->
+{% if produits_similaires %}
+<div class="mt-5">
+    <h4>Produits similaires</h4>
+    <div class="row">
+        {% for p in produits_similaires %}
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+                {% if p.image_principale %}
+                    <img src="{{ p.image_principale.url }}"
+                         class="card-img-top" style="height:150px; object-fit:cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h6>{{ p.nom }}</h6>
+                    <p class="text-orange fw-bold">{{ p.prix }} FCFA</p>
+                    <a href="{% url 'detail_produit' p.slug %}"
+                       class="btn btn-outline-secondary btn-sm w-100">Voir</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<style>
+.reviews-carousel-wrapper { cursor: grab; }
+.reviews-carousel-wrapper:active { cursor: grabbing; }
+.review-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 12px !important;
+}
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+</style>
+
+<script>
+const track = document.getElementById('reviewsTrack');
+if (track) {
+    let position = 0;
+    let isPaused = false;
+    const cardWidth = 296;
+    const totalCards = track.querySelectorAll('.review-card').length / 2;
+    const maxScroll = cardWidth * totalCards;
+
+    function animate() {
+        if (!isPaused) {
+            position += 0.5;
+            if (position >= maxScroll) position = 0;
+            track.style.transform = `translateX(-${position}px)`;
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    track.addEventListener('mouseenter', () => isPaused = true);
+    track.addEventListener('mouseleave', () => isPaused = false);
+
+    document.getElementById('pauseReview').addEventListener('click', function() {
+        isPaused = !isPaused;
+        this.textContent = isPaused ? '▶ Reprendre' : '⏸ Pause';
+    });
+    document.getElementById('nextReview').addEventListener('click', () => {
+        position += cardWidth;
+        if (position >= maxScroll) position = 0;
+        track.style.transform = `translateX(-${position}px)`;
+    });
+    document.getElementById('prevReview').addEventListener('click', () => {
+        position -= cardWidth;
+        if (position < 0) position = maxScroll - cardWidth;
+        track.style.transform = `translateX(-${position}px)`;
+    });
+
+    // Drag
+    let isDragging = false, startX = 0, startPos = 0;
+    track.addEventListener('mousedown', (e) => {
+        isDragging = true; isPaused = true;
+        startX = e.clientX; startPos = position;
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        position = startPos + (startX - e.clientX);
+        track.style.transform = `translateX(-${position}px)`;
+    });
+    document.addEventListener('mouseup', () => {
+        isDragging = false; isPaused = false;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+<!-- templates/users/inscription_acheteur.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inscription — MarketPlace Bénin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">
+                    <i class="fas fa-user-plus text-orange"></i> Créer un compte
+                </h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-orange w-100 mt-3">
+                        S'inscrire
+                    </button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    Déjà un compte ?
+                    <a href="{% url 'connexion' %}">Se connecter</a>
+                </p>
+                <p class="text-center">
+                    Vous êtes vendeur ?
+                    <a href="{% url 'inscription_vendeur' %}">Créer une boutique</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

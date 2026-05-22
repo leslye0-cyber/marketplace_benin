@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Avis — {{ produit.nom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>
+        <i class="fas fa-star text-orange"></i>
+        Avis sur {{ produit.nom }}
+    </h3>
+    <a href="{% url 'detail_produit' produit.slug %}"
+       class="btn btn-outline-secondary">
+        ← Retour au produit
+    </a>
+</div>
+
+<!-- Résumé notes -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                <h1 class="text-orange display-4">{{ moyenne }}</h1>
+                <div class="fs-4">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= moyenne %}⭐{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+                <p class="text-muted">{{ total }} avis</p>
+            </div>
+            <div class="col-md-9">
+                {% for i in "54321" %}
+                {% with note=forloop.counter|add:0 %}
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="text-muted small" style="width:60px;">
+                        {{ forloop.counter }} étoile{{ forloop.counter|pluralize }}
+                    </span>
+                    <div class="progress flex-grow-1" style="height:10px;">
+                        <div class="progress-bar bg-warning"
+                             style="width: {% widthratio avis|length total 100 %}%">
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des avis -->
+{% if avis %}
+    {% for review in avis %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ review.auteur.username }}</strong>
+                    <span class="text-warning ms-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.note %}⭐{% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <small class="text-muted">
+                    {{ review.created_at|date:"d/m/Y" }}
+                </small>
+            </div>
+            <p class="mt-2 mb-0">{{ review.commentaire }}</p>
+
+            {% if user == review.auteur %}
+            <div class="mt-2">
+                <a href="{% url 'ajouter_avis' produit.slug %}"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+                <a href="{% url 'supprimer_avis' review.id %}"
+                   class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-trash"></i> Supprimer
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-star fa-3x text-muted mb-3"></i>
+        <p class="text-muted">Aucun avis pour l'instant.</p>
+        {% if user.is_authenticated and not user.est_vendeur %}
+        <a href="{% url 'ajouter_avis' produit.slug %}" class="btn btn-orange">
+            Soyez le premier à donner un avis
+        </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

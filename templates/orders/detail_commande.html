@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Commande #{{ commande.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="fas fa-receipt text-orange"></i> Commande #{{ commande.id }}</h3>
+    <a href="{% url 'mes_commandes' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+    <a href="{% url 'suivi_livraison' commande.id %}"
+   class="btn btn-orange btn-sm mt-2">
+    <i class="fas fa-map-marker-alt"></i> Suivre ma livraison
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header"><h5 class="mb-0">Articles</h5></div>
+            <div class="card-body">
+                {% for item in items %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <div>
+                        <strong>{{ item.product.nom }}</strong>
+                        <small class="text-muted d-block">{{ item.product.shop.nom }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span>{{ item.quantite }} × {{ item.prix_unitaire }} FCFA</span>
+                        <strong class="d-block text-orange">{{ item.get_total }} FCFA</strong>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="d-flex justify-content-between mt-3">
+                    <span>Sous-total</span>
+                    <strong>{{ commande.sous_total }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Livraison</span>
+                    <strong>{{ commande.frais_livraison }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="fw-bold fs-5">Total</span>
+                    <strong class="text-orange fs-5">{{ commande.total }} FCFA</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header"><h5 class="mb-0">Livraison</h5></div>
+            <div class="card-body">
+                <p><i class="fas fa-map-marker-alt text-orange"></i> {{ commande.adresse_livraison }}</p>
+                <p><i class="fas fa-city text-orange"></i> {{ commande.ville }}</p>
+                <p><i class="fas fa-phone text-orange"></i> {{ commande.telephone_livraison }}</p>
+                <p><i class="fas fa-credit-card text-orange"></i> {{ commande.get_methode_paiement_display }}</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Statut</h5></div>
+            <div class="card-body text-center">
+                {% if commande.statut == 'en_attente' %}
+                    <span class="badge bg-warning fs-6">En attente de paiement</span>
+                {% elif commande.statut == 'payee' %}
+                    <span class="badge bg-info fs-6">Payée</span>
+                {% elif commande.statut == 'en_preparation' %}
+                    <span class="badge bg-primary fs-6">En préparation</span>
+                {% elif commande.statut == 'expediee' %}
+                    <span class="badge bg-secondary fs-6">Expédiée</span>
+                {% elif commande.statut == 'livree' %}
+                    <span class="badge bg-success fs-6">Livrée ✓</span>
+                {% elif commande.statut == 'annulee' %}
+                    <span class="badge bg-danger fs-6">Annulée</span>
+                {% endif %}
+                <p class="text-muted mt-2 small">
+                    Commandé le {{ commande.created_at|date:"d/m/Y à H:i" }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

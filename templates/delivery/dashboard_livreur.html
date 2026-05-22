@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Dashboard Livreur{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Dashboard Livreur</h2>
+            <p>Bonjour {{ livreur.utilisateur.get_full_name|default:livreur.utilisateur.username }}</p>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Livraisons en cours</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for livraison in livraisons_en_cours %}
+                            <div class="border p-3 mb-3">
+                                <h6>Commande #{{ livraison.order.id }}</h6>
+                                <p><strong>Adresse :</strong> {{ livraison.adresse_arrivee }}</p>
+                                <p><strong>Statut :</strong> {{ livraison.get_statut_display }}</p>
+                                <p><strong>Numéro de suivi :</strong> {{ livraison.numero_suivi }}</p>
+
+                                {% if livraison.statut == 'assignee' %}
+                                <a href="{% url 'delivery:prendre_livraison' livraison.id %}" class="btn btn-primary btn-sm">Prendre en charge</a>
+                                {% elif livraison.statut == 'en_cours' %}
+                                <a href="{% url 'delivery:livrer_livraison' livraison.id %}" class="btn btn-success btn-sm">Marquer livrée</a>
+                                <a href="{% url 'delivery:echouer_livraison' livraison.id %}" class="btn btn-danger btn-sm">Échouer</a>
+                                {% endif %}
+
+                                <a href="{% url 'delivery:detail_livraison' livraison.id %}" class="btn btn-info btn-sm">Détails</a>
+                            </div>
+                            {% empty %}
+                            <p>Aucune livraison en cours.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Dernières livraisons</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for livraison in livraisons_terminees %}
+                            <div class="border p-2 mb-2">
+                                <small>Commande #{{ livraison.order.id }} - {{ livraison.get_statut_display }}</small>
+                                {% if livraison.date_livraison %}
+                                <br><small>{{ livraison.date_livraison|date:"d/m/Y H:i" }}</small>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p>Aucune livraison terminée.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

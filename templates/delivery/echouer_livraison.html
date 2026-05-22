@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Marquer livraison comme échouée{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Signaler un échec de livraison</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Commande #{{ livraison.order.id }}</h5>
+                    <p><strong>Client :</strong> {{ livraison.order.acheteur.get_full_name|default:livraison.order.acheteur.username }}</p>
+                    <p><strong>Adresse :</strong> {{ livraison.adresse_arrivee }}</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="raison" class="form-label">Raison de l'échec *</label>
+                            <textarea class="form-control" id="raison" name="raison" rows="3" required placeholder="Expliquez pourquoi la livraison a échoué..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Confirmer l'échec</button>
+                        <a href="{% url 'delivery:dashboard_livreur' %}" class="btn btn-secondary">Annuler</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

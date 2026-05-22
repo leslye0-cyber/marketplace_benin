@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement — Commande #{{ commande.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <div class="card shadow mb-4" style="border-top: 5px solid {{ couleur }};">
+            <div class="card-body text-center p-4">
+                <h2 style="color: {{ couleur }};">
+                    {% if commande.methode_paiement == 'mtn_momo' %}
+                        📱 MTN Mobile Money
+                    {% elif commande.methode_paiement == 'moov_money' %}
+                        📱 Moov Money
+                    {% else %}
+                        💵 Espèces à la livraison
+                    {% endif %}
+                </h2>
+                <p class="text-muted">Entrez votre numéro pour procéder au paiement</p>
+
+                <div class="bg-light rounded p-3 my-3">
+                    <h3 class="text-orange mb-0">{{ commande.total }} FCFA</h3>
+                    <small class="text-muted">Montant total à payer</small>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Numéro {{ operateur }} Mobile Money
+                        </label>
+                        {{ form.numero_mobile_money }}
+                        {% if form.numero_mobile_money.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.numero_mobile_money.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-info text-start small">
+                        <strong>Instructions :</strong><br>
+                        {% if commande.methode_paiement == 'mtn_momo' %}
+                        1. Composez <strong>*880#</strong> sur votre téléphone MTN<br>
+                        2. Choisissez "Paiement marchand"<br>
+                        3. Entrez le code marchand et confirmez
+                        {% else %}
+                        1. Composez <strong>*555#</strong> sur votre téléphone Moov<br>
+                        2. Choisissez "Moov Money"<br>
+                        3. Choisissez "Paiement" et confirmez
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-lg w-100 text-white fw-bold"
+                            style="background-color: {{ couleur }};">
+                        <i class="fas fa-mobile-alt"></i> Procéder au paiement
+                    </button>
+                </form>
+
+                <a href="{% url 'checkout' %}" class="btn btn-link text-muted mt-2">
+                    ← Modifier la commande
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">Résumé commande #{{ commande.id }}</h6>
+            </div>
+            <div class="card-body">
+                {% for item in commande.items.all %}
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ item.product.nom }} × {{ item.quantite }}</span>
+                    <strong>{{ item.get_total }} FCFA</strong>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between small">
+                    <span>Livraison</span>
+                    <strong>{{ commande.frais_livraison }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Total</span>
+                    <strong class="text-orange">{{ commande.total }} FCFA</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

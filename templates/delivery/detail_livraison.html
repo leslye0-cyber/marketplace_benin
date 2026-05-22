@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Livraison #{{ livraison.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>
+        <i class="fas fa-motorcycle text-orange"></i>
+        Livraison #{{ livraison.id }}
+    </h3>
+    {% if est_livreur %}
+    <a href="{% url 'liste_livraisons' %}" class="btn btn-outline-secondary">
+        ← Retour
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+
+        <!-- Infos commande -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Commande #{{ livraison.order.id }}</h5>
+            </div>
+            <div class="card-body">
+                {% for item in livraison.order.items.all %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ item.product.nom }} × {{ item.quantite }}</span>
+                    <strong>{{ item.get_total }} FCFA</strong>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Total</span>
+                    <strong class="text-orange">{{ livraison.order.total }} FCFA</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adresses -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Itinéraire</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-center">
+                        <div class="rounded-circle bg-orange d-flex align-items-center justify-content-center"
+                             style="width:35px; height:35px; background-color:#FF6B00;">
+                            <i class="fas fa-store text-white small"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Départ (Vendeur)</strong>
+                        <p class="text-muted mb-0">{{ livraison.adresse_depart }}</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="text-center">
+                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
+                             style="width:35px; height:35px;">
+                            <i class="fas fa-home text-white small"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Arrivée (Acheteur)</strong>
+                        <p class="text-muted mb-0">{{ livraison.adresse_arrivee }}</p>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-phone"></i>
+                            {{ livraison.order.telephone_livraison }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-5">
+
+        <!-- Statut + Actions livreur -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Statut</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if livraison.statut == 'assignee' %}
+                    <span class="badge bg-warning fs-6 mb-3">Assignée</span>
+                {% elif livraison.statut == 'en_cours' %}
+                    <span class="badge bg-primary fs-6 mb-3">En cours</span>
+                {% elif livraison.statut == 'livree' %}
+                    <span class="badge bg-success fs-6 mb-3">✓ Livrée</span>
+                {% elif livraison.statut == 'echouee' %}
+                    <span class="badge bg-danger fs-6 mb-3">Échouée</span>
+                {% endif %}
+
+                {% if est_livreur and livraison.statut != 'livree' %}
+                <form method="post" action="{% url 'mettre_a_jour_statut' livraison.id %}">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 mt-3">
+                        {% if livraison.statut == 'assignee' %}
+                        <button type="submit" name="statut" value="en_cours"
+                                class="btn btn-primary">
+                            <i class="fas fa-motorcycle"></i> Démarrer la livraison
+                        </button>
+                        {% elif livraison.statut == 'en_cours' %}
+                        <button type="submit" name="statut" value="livree"
+                                class="btn btn-success">
+                            <i class="fas fa-check"></i> Marquer comme livrée
+                        </button>
+                        <button type="submit" name="statut" value="echouee"
+                                class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i> Échec de livraison
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Paiement -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Paiement</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    <strong>Méthode :</strong>
+                    {{ livraison.order.get_methode_paiement_display }}
+                </p>
+                {% if livraison.order.methode_paiement == 'especes' %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <strong>Collecter {{ livraison.order.total }} FCFA</strong>
+                    à la livraison
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    Paiement déjà effectué
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

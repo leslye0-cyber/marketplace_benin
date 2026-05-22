@@ -1,0 +1,35 @@
+<!-- templates/users/connexion.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Connexion — MarketPlace Bénin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">
+                    <i class="fas fa-sign-in-alt text-orange"></i> Connexion
+                </h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-orange w-100 mt-3">
+                        Se connecter
+                    </button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    Pas encore de compte ?
+                    <a href="{% url 'inscription_acheteur' %}">S'inscrire</a>
+                </p>
+                <p class="text-center">
+                    Vous êtes vendeur ?
+                    <a href="{% url 'inscription_vendeur' %}">Créer une boutique</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

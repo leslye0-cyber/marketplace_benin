@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Assigner un livreur{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Assigner un livreur</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Commande #{{ livraison.order.id }}</h5>
+                    <p><strong>Client :</strong> {{ livraison.order.acheteur.get_full_name|default:livraison.order.acheteur.username }}</p>
+                    <p><strong>Adresse de livraison :</strong> {{ livraison.adresse_arrivee }}</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="livreur" class="form-label">Choisir un livreur</label>
+                            <select class="form-control" id="livreur" name="livreur" required>
+                                <option value="">-- Sélectionner un livreur --</option>
+                                {% for livreur in livreurs_disponibles %}
+                                <option value="{{ livreur.id }}">
+                                    {{ livreur.utilisateur.get_full_name|default:livreur.utilisateur.username }}
+                                    {% if livreur.vehicule %} - {{ livreur.vehicule }}{% endif %}
+                                    {% if livreur.zone_couverture %} ({{ livreur.zone_couverture }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Assigner le livreur</button>
+                        <a href="{% url 'delivery:liste_livraisons_admin' %}" class="btn btn-secondary">Annuler</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

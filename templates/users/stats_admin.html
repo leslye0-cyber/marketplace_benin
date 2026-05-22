@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistiques — Administration{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-chart-bar text-orange"></i> Statistiques plateforme
+    </h2>
+    <a href="/admin/" class="btn btn-outline-secondary">
+        <i class="fas fa-cog"></i> Admin Django
+    </a>
+</div>
+
+<!-- Stats globales -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm text-center"
+             style="border-top: 4px solid #FF6B00;">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-orange mb-2"></i>
+                <h3 class="text-orange">{{ total_users }}</h3>
+                <p class="mb-0 text-muted">Acheteurs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm text-center"
+             style="border-top: 4px solid #28a745;">
+            <div class="card-body">
+                <i class="fas fa-store fa-2x text-success mb-2"></i>
+                <h3 class="text-success">{{ total_vendeurs }}</h3>
+                <p class="mb-0 text-muted">Vendeurs actifs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm text-center"
+             style="border-top: 4px solid #007bff;">
+            <div class="card-body">
+                <i class="fas fa-shopping-bag fa-2x text-primary mb-2"></i>
+                <h3 class="text-primary">{{ total_commandes }}</h3>
+                <p class="mb-0 text-muted">Commandes totales</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card shadow-sm text-center"
+             style="border-top: 4px solid #ffc107;">
+            <div class="card-body">
+                <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                <h3 class="text-warning">{{ commissions_totales }} FCFA</h3>
+                <p class="mb-0 text-muted">Commissions (5%)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenus -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-bill-wave text-orange"></i>
+                    Revenus plateforme
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Revenus bruts totaux</span>
+                    <strong class="text-orange">{{ revenus_bruts }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Commissions collectées (5%)</span>
+                    <strong class="text-success">{{ commissions_totales }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Commandes payées</span>
+                    <strong class="text-primary">{{ commandes_payees }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Produits disponibles</span>
+                    <strong>{{ total_produits }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-store text-orange"></i>
+                    Boutiques
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Boutiques actives</span>
+                    <strong class="text-success">{{ total_boutiques }}</strong>
+                </div>
+                <hr>
+                <h6 class="text-muted">Vendeurs récents</h6>
+                {% for vendeur in vendeurs_recents %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle text-white d-flex align-items-center
+                                    justify-content-center fw-bold"
+                             style="width:30px; height:30px; background-color:#FF6B00;
+                                    flex-shrink:0; font-size:0.8rem;">
+                            {{ vendeur.username|first|upper }}
+                        </div>
+                        <span>{{ vendeur.username }}</span>
+                    </div>
+                    <small class="text-muted">
+                        {{ vendeur.date_joined|date:"d/m/Y" }}
+                    </small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dernières commandes -->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between">
+        <h5 class="mb-0">
+            <i class="fas fa-list text-orange"></i> Dernières commandes
+        </h5>
+        <a href="/admin/orders/order/" class="btn btn-sm btn-outline-secondary">
+            Voir tout dans l'admin
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Acheteur</th>
+                    <th>Total</th>
+                    <th>Paiement</th>
+                    <th>Statut</th>
+                    <th>Commission</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for commande in commandes_recentes %}
+                <tr>
+                    <td>#{{ commande.id }}</td>
+                    <td>{{ commande.acheteur.username }}</td>
+                    <td class="text-orange fw-bold">{{ commande.total }} FCFA</td>
+                    <td>
+                        {% if commande.methode_paiement == 'mtn_momo' %}
+                            <span class="badge"
+                                  style="background:#FFCC00; color:#000;">MTN</span>
+                        {% elif commande.methode_paiement == 'moov_money' %}
+                            <span class="badge bg-primary">Moov</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Espèces</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if commande.statut == 'en_attente' %}
+                            <span class="badge bg-warning">En attente</span>
+                        {% elif commande.statut == 'payee' %}
+                            <span class="badge bg-info">Payée</span>
+                        {% elif commande.statut == 'en_preparation' %}
+                            <span class="badge bg-primary">Préparation</span>
+                        {% elif commande.statut == 'expediee' %}
+                            <span class="badge bg-secondary">Expédiée</span>
+                        {% elif commande.statut == 'livree' %}
+                            <span class="badge bg-success">Livrée ✓</span>
+                        {% elif commande.statut == 'annulee' %}
+                            <span class="badge bg-danger">Annulée</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-success">
+                        {% if commande.statut != 'en_attente' and commande.statut != 'annulee' %}
+                            +{{ commande.total|divisibleby:20 }} FCFA
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>{{ commande.created_at|date:"d/m/Y" }}</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

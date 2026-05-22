@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil — MarketPlace Bénin{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="bg-light rounded p-5 mb-4 text-center">
+    <h1 class="text-orange">🛍️ MarketPlace Bénin</h1>
+    <p class="lead">Achetez local, livraison rapide au Bénin</p>
+
+    <!-- Barre de recherche -->
+    <form method="get" action="{% url 'home' %}">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control form-control-lg"
+                           placeholder="Rechercher un produit..."
+                           value="{{ recherche }}">
+                    <button class="btn btn-orange btn-lg" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Catégories -->
+{% if categories %}
+<div class="mb-4">
+    <h5 class="mb-3">Catégories</h5>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">
+            Tout
+        </a>
+        {% for cat in categories %}
+        <a href="{% url 'produits_par_categorie' cat.slug %}"
+           class="btn btn-outline-secondary btn-sm">
+            {{ cat.nom }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Produits vedette -->
+{% if produits_vedette %}
+<h5 class="mb-3">⭐ Produits en vedette</h5>
+<div class="row mb-4">
+    {% for produit in produits_vedette %}
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 shadow-sm border-warning">
+            {% if produit.image_principale %}
+                <img src="{{ produit.image_principale.url }}"
+                     class="card-img-top" style="height:200px; object-fit:cover;"
+                     alt="{{ produit.nom }}">
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ produit.nom }}</h6>
+                <p class="text-orange fw-bold">{{ produit.prix }} FCFA</p>
+                <a href="{% url 'detail_produit' produit.slug %}"
+                   class="btn btn-orange btn-sm w-100">Voir</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tous les produits -->
+<h5 class="mb-3">
+    {% if recherche %}
+        Résultats pour "{{ recherche }}" ({{ produits.count }})
+    {% else %}
+        Tous les produits ({{ produits.count }})
+    {% endif %}
+</h5>
+
+{% if produits %}
+<div class="row">
+    {% for produit in produits %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 shadow-sm">
+            {% if produit.image_principale %}
+                <img src="{{ produit.image_principale.url }}"
+                     class="card-img-top" style="height:200px; object-fit:cover;"
+                     alt="{{ produit.nom }}">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center"
+                     style="height:200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h6 class="card-title">{{ produit.nom }}</h6>
+                <p class="text-muted small">{{ produit.shop.nom }}</p>
+                <p class="text-orange fw-bold mt-auto">{{ produit.prix }} FCFA</p>
+                <a href="{% url 'detail_produit' produit.slug %}"
+                   class="btn btn-orange btn-sm w-100">Voir le produit</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+    <p class="text-muted">Aucun produit trouvé.</p>
+    {% if not user.is_authenticated %}
+        <a href="{% url 'inscription_vendeur' %}" class="btn btn-orange">
+            Devenir vendeur
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
